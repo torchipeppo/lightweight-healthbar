@@ -4,6 +4,8 @@
             progress.hp { accent-color: green; }
             progress.hp-crisis { accent-color: red; }
             progress.mp { accent-color: blue; }
+
+            input.three-digits { width:4em; }
         </style>
         <script>
             function getHpBar() {
@@ -44,13 +46,13 @@
     </head>
     <body>
         <progress class="hp" id="hp-bar" value="60" max="60"></progress>
-        <input type="number" id="hp-field" value="60" onchange="onHpChange(this.value)">
+        <input type="number" class="three-digits" id="hp-field" value="60" onchange="onHpChange(this.value)">
         /
-        <input type="number" id="max-hp-field" value="60" onchange="onMaxHpChange(this.value)">
+        <input type="number" class="three-digits" id="max-hp-field" value="60" onchange="onMaxHpChange(this.value)">
         <p/>
         <progress class="mp" id="mp-bar" value="50" max="50"></progress>
-        <input type="number" id="mp-field" value="50" onchange="onMpChange(this.value)">
+        <input type="number" class="three-digits" id="mp-field" value="50" onchange="onMpChange(this.value)">
         /
-        <input type="number" id="max-mp-field" value="50" onchange="onMaxMpChange(this.value)">
+        <input type="number" class="three-digits" id="max-mp-field" value="50" onchange="onMaxMpChange(this.value)">
     </body>
 </html>
