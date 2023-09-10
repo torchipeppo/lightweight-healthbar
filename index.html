@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <style>
+            progress.hp::-moz-progress-bar { background: green; }
+            progress.hp-crisis::-moz-progress-bar { background: red; }
+            progress.mp::-moz-progress-bar { background: blue; }
+            progress.hp::-webkit-progress-value { background: green; }
+            progress.hp-crisis::-webkit-progress-value { background: red; }
+            progress.mp::-webkit-progress-value { background: blue; }
+        </style>
+        <script>
+            function getHpBar() {
+                return document.getElementById("hp-bar");
+            }
+            function getMpBar() {
+                return document.getElementById("mp-bar");
+            }
+            function checkCrisis() {
+                hpbar = getHpBar();
+                crisisThreshold = Math.floor(hpbar.getAttribute("max") / 2);
+                if (hpbar.getAttribute("value") <= crisisThreshold) {
+                    hpbar.className = "hp-crisis";
+                }
+                else {
+                    hpbar.className = "hp";
+                }
+            }
+            function onHpChange(newHp) {
+                hpbar = getHpBar();
+                hpbar.setAttribute("value", newHp);
+                checkCrisis()
+            }
+            function onMaxHpChange(newHp) {
+                hpbar = getHpBar();
+                hpbar.setAttribute("max", newHp);
+                checkCrisis()
+            }
+            function onMpChange(newMp) {
+                mpbar = getMpBar();
+                mpbar.setAttribute("value", newMp);
+            }
+            function onMaxMpChange(newMp) {
+                mpbar = getMpBar();
+                mpbar.setAttribute("max", newMp);
+            }
+        </script>
+    </head>
+    <body>
+        <progress class="hp" id="hp-bar" value="60" max="60"></progress>
+        <input type="number" id="hp-field" value="60" onchange="onHpChange(this.value)">
+        /
+        <input type="number" id="max-hp-field" value="60" onchange="onMaxHpChange(this.value)">
+        <p/>
+        <progress class="mp" id="mp-bar" value="50" max="50"></progress>
+        <input type="number" id="mp-field" value="50" onchange="onMpChange(this.value)">
+        /
+        <input type="number" id="max-mp-field" value="50" onchange="onMaxMpChange(this.value)">
+    </body>
+</html>
