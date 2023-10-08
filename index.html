@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
     <head>
         <style>
@@ -8,11 +9,53 @@
             input.three-digits { width:4em; }
         </style>
         <script>
+            function setFromLocalStorageIfNotNull(item, callback) {
+                val = window.localStorage.getItem(item);
+                if (val != null) {
+                    callback(val);
+                }
+            }
+            function onLoad() {
+                hpbar = getHpBar();
+                mpbar = getMpBar();
+                allowLocalStorage = window.localStorage.getItem("allowLocalStorage");
+                if (allowLocalStorage) {
+                    onAllow();
+                    setFromLocalStorageIfNotNull("hp", (hp)=>{
+                        hpbar.setAttribute("value", hp);
+                        document.getElementById("hp-field").value = hp;
+                    });
+                    setFromLocalStorageIfNotNull("maxhp", (maxhp)=>{
+                        hpbar.setAttribute("max", maxhp);
+                        document.getElementById("max-hp-field").value = maxhp;
+                        document.getElementById("max-hp-text").innerText = maxhp;
+                    });
+                    setFromLocalStorageIfNotNull("mp", (mp)=>{
+                        mpbar.setAttribute("value", mp);
+                        document.getElementById("mp-field").value = mp;
+                    });
+                    setFromLocalStorageIfNotNull("maxmp", (maxmp)=>{
+                        mpbar.setAttribute("max", maxmp);
+                        document.getElementById("max-mp-field").value = maxmp;
+                        document.getElementById("max-mp-text").innerText = maxmp;
+                    });
+                    setFromLocalStorageIfNotNull("autosave", (autosave)=>{
+                        document.getElementById("autosave-checkbox").checked = autosave;
+                    });
+                    setFromLocalStorageIfNotNull("lockmax", (lock)=>{
+                        setLockMax(lock === 'true');  // js weirdness
+                    });
+                    checkCrisis()
+                }
+            }
             function getHpBar() {
                 return document.getElementById("hp-bar");
             }
             function getMpBar() {
                 return document.getElementById("mp-bar");
+            }
+            function getAutosave() {
+                return document.getElementById("autosave-checkbox").checked
             }
             function checkCrisis() {
                 hpbar = getHpBar();
@@ -28,31 +71,89 @@
                 hpbar = getHpBar();
                 hpbar.setAttribute("value", newHp);
                 checkCrisis()
+                if (getAutosave()) {
+                    save();
+                }
             }
             function onMaxHpChange(newHp) {
                 hpbar = getHpBar();
                 hpbar.setAttribute("max", newHp);
+                document.getElementById("max-hp-text").innerText = newHp;
                 checkCrisis()
+                if (getAutosave()) {
+                    save();
+                }
             }
             function onMpChange(newMp) {
                 mpbar = getMpBar();
                 mpbar.setAttribute("value", newMp);
+                if (getAutosave()) {
+                    save();
+                }
             }
             function onMaxMpChange(newMp) {
                 mpbar = getMpBar();
                 mpbar.setAttribute("max", newMp);
+                document.getElementById("max-mp-text").innerText = newMp;
+                if (getAutosave()) {
+                    save();
+                }
+            }
+            function setLockMax(lock) {
+                document.getElementById("max-hp-field").hidden = lock;
+                document.getElementById("max-hp-text").hidden = !lock;
+                document.getElementById("max-mp-field").hidden = lock;
+                document.getElementById("max-mp-text").hidden = !lock;
+                document.getElementById("max-lock-button").hidden = lock;
+                document.getElementById("max-unlock-button").hidden = !lock;
+                if (getAutosave()) {
+                    save();
+                }
+            }
+            function onAllow() {
+                allowLocalStorage = true;
+                document.getElementById("localstorage-consent").hidden = true;
+                document.getElementById("autosave-span").hidden = false;
+            }
+            function save() {
+                if (!allowLocalStorage) {
+                    console.error("Trying to save w/o permission");
+                }
+                else {
+                    ls = window.localStorage;
+                    ls.setItem("allowLocalStorage", allowLocalStorage);
+                    ls.setItem("hp", hpbar.getAttribute("value"));
+                    ls.setItem("maxhp", hpbar.getAttribute("max"));
+                    ls.setItem("mp", mpbar.getAttribute("value"));
+                    ls.setItem("maxmp", mpbar.getAttribute("max"));
+                    ls.setItem("autosave", getAutosave());
+                    ls.setItem("lockmax", document.getElementById("max-lock-button").hidden)
+                }
             }
         </script>
     </head>
-    <body>
+    <body onload="onLoad()">
         <progress class="hp" id="hp-bar" value="60" max="60"></progress>
         <input type="number" class="three-digits" id="hp-field" value="60" onchange="onHpChange(this.value)">
         /
         <input type="number" class="three-digits" id="max-hp-field" value="60" onchange="onMaxHpChange(this.value)">
+        <span id="max-hp-text" hidden>60</span>
         <p/>
         <progress class="mp" id="mp-bar" value="50" max="50"></progress>
         <input type="number" class="three-digits" id="mp-field" value="50" onchange="onMpChange(this.value)">
         /
         <input type="number" class="three-digits" id="max-mp-field" value="50" onchange="onMaxMpChange(this.value)">
+        <span id="max-mp-text" hidden>50</span>
+        <p/>
+        <button id="max-lock-button" onclick="setLockMax(true)">Lock max HP/MP</button>
+        <button id="max-unlock-button" onclick="setLockMax(false)" hidden>Unlock max HP/MP</button>
+        <p/>
+        <button onclick="onAllow(); save();">Save</button>
+        <span id="localstorage-consent">
+            <i>By using the "Save" feature, you consent to this page using the Local Storage of your browser. No data is ever sent to any server.</i>
+        </span>
+        <span id="autosave-span" hidden>
+            <input type="checkbox" id="autosave-checkbox"/> <label for="autosave-checkbox"> Autosave</label>
+        </span>
     </body>
 </html>
