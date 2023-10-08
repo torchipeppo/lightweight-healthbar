@@ -40,7 +40,7 @@
                         document.getElementById("max-mp-text").innerText = maxmp;
                     });
                     setFromLocalStorageIfNotNull("autosave", (autosave)=>{
-                        document.getElementById("autosave-checkbox").checked = autosave;
+                        document.getElementById("autosave-checkbox").checked = (autosave === 'true');  // js weirdness
                     });
                     setFromLocalStorageIfNotNull("lockmax", (lock)=>{
                         setLockMax(lock === 'true');  // js weirdness
@@ -55,7 +55,7 @@
                 return document.getElementById("mp-bar");
             }
             function getAutosave() {
-                return document.getElementById("autosave-checkbox").checked
+                return document.getElementById("autosave-checkbox").checked;
             }
             function checkCrisis() {
                 hpbar = getHpBar();
@@ -153,7 +153,7 @@
             <i>By using the "Save" feature, you consent to this page using the Local Storage of your browser. No data is ever sent to any server.</i>
         </span>
         <span id="autosave-span" hidden>
-            <input type="checkbox" id="autosave-checkbox"/> <label for="autosave-checkbox"> Autosave</label>
+            <input type="checkbox" id="autosave-checkbox" onchange="save()"/> <label for="autosave-checkbox"> Autosave</label>
         </span>
     </body>
 </html>
