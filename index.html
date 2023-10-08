@@ -10,16 +10,16 @@
         </style>
         <script>
             function setFromLocalStorageIfNotNull(item, callback) {
-                val = window.localStorage.getItem(item);
+                const val = window.localStorage.getItem(item);
                 if (val != null) {
                     callback(val);
                 }
             }
             function onLoad() {
-                hpbar = getHpBar();
-                mpbar = getMpBar();
-                allowLocalStorage = window.localStorage.getItem("allowLocalStorage");
-                if (allowLocalStorage) {
+                const hpbar = getHpBar();
+                const mpbar = getMpBar();
+                window.allowLocalStorage = window.localStorage.getItem("allowLocalStorage");
+                if (window.allowLocalStorage) {
                     onAllow();
                     setFromLocalStorageIfNotNull("hp", (hp)=>{
                         hpbar.setAttribute("value", hp);
@@ -58,8 +58,8 @@
                 return document.getElementById("autosave-checkbox").checked;
             }
             function checkCrisis() {
-                hpbar = getHpBar();
-                crisisThreshold = Math.floor(hpbar.getAttribute("max") / 2);
+                const hpbar = getHpBar();
+                const crisisThreshold = Math.floor(hpbar.getAttribute("max") / 2);
                 if (hpbar.getAttribute("value") <= crisisThreshold) {
                     hpbar.className = "hp-crisis";
                 }
@@ -68,7 +68,7 @@
                 }
             }
             function onHpChange(newHp) {
-                hpbar = getHpBar();
+                const hpbar = getHpBar();
                 hpbar.setAttribute("value", newHp);
                 checkCrisis()
                 if (getAutosave()) {
@@ -76,7 +76,7 @@
                 }
             }
             function onMaxHpChange(newHp) {
-                hpbar = getHpBar();
+                const hpbar = getHpBar();
                 hpbar.setAttribute("max", newHp);
                 document.getElementById("max-hp-text").innerText = newHp;
                 checkCrisis()
@@ -85,14 +85,14 @@
                 }
             }
             function onMpChange(newMp) {
-                mpbar = getMpBar();
+                const mpbar = getMpBar();
                 mpbar.setAttribute("value", newMp);
                 if (getAutosave()) {
                     save();
                 }
             }
             function onMaxMpChange(newMp) {
-                mpbar = getMpBar();
+                const mpbar = getMpBar();
                 mpbar.setAttribute("max", newMp);
                 document.getElementById("max-mp-text").innerText = newMp;
                 if (getAutosave()) {
@@ -111,16 +111,18 @@
                 }
             }
             function onAllow() {
-                allowLocalStorage = true;
+                window.allowLocalStorage = true;
                 document.getElementById("localstorage-consent").hidden = true;
                 document.getElementById("autosave-span").hidden = false;
             }
             function save() {
-                if (!allowLocalStorage) {
+                if (!window.allowLocalStorage) {
                     console.error("Trying to save w/o permission");
                 }
                 else {
-                    ls = window.localStorage;
+                    const hpbar = getHpBar();
+                    const mpbar = getMpBar();
+                    const ls = window.localStorage;
                     ls.setItem("allowLocalStorage", allowLocalStorage);
                     ls.setItem("hp", hpbar.getAttribute("value"));
                     ls.setItem("maxhp", hpbar.getAttribute("max"));
