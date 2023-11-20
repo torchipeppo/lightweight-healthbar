@@ -9,6 +9,22 @@
             progress.mp { accent-color: blue; }
 
             input.three-digits { width:4em; }
+            
+            .healthbar-spread {
+                width: auto;
+                max-width: 40em;
+            }
+            .healthbar-spread .left {
+                width: auto;
+                overflow: hidden;
+            }
+            .healthbar-spread .right {
+                width: auto;
+                padding-left: 10px;
+                padding-right: 10px;
+                float: right;
+            }
+            .healthbar-spread progress { width: 100%; }
         </style>
         <script>
             function setFromLocalStorageIfNotNull(item, callback) {
@@ -137,17 +153,29 @@
         </script>
     </head>
     <body onload="onLoad()">
-        <progress class="hp" id="hp-bar" value="60" max="60"></progress>
+        <div class="healthbar-spread">
+            <div class="right">
         <input type="number" class="three-digits" id="hp-field" value="60" onchange="onHpChange(this.value)">
         /
         <input type="number" class="three-digits" id="max-hp-field" value="60" onchange="onMaxHpChange(this.value)">
         <span id="max-hp-text" hidden>60</span>
+            </div>
+            <div class="left">
+                <progress class="hp" id="hp-bar" value="60" max="60"></progress>
+            </div>
+        </div>
         <p/>
-        <progress class="mp" id="mp-bar" value="50" max="50"></progress>
+        <div class="healthbar-spread">
+            <div class="right">
         <input type="number" class="three-digits" id="mp-field" value="50" onchange="onMpChange(this.value)">
         /
         <input type="number" class="three-digits" id="max-mp-field" value="50" onchange="onMaxMpChange(this.value)">
         <span id="max-mp-text" hidden>50</span>
+            </div>
+            <div class="left">
+                <progress class="mp" id="mp-bar" value="50" max="50"></progress>
+            </div>
+        </div>
         <p/>
         <button id="max-lock-button" onclick="setLockMax(true)">Lock max HP/MP</button>
         <button id="max-unlock-button" onclick="setLockMax(false)" hidden>Unlock max HP/MP</button>
