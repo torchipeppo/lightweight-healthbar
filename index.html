@@ -3,6 +3,7 @@
     <head>
         <title>Lightweight Healthbars</title>
         <link rel='icon' type='image/ico' href='./favicon.ico'/>
+        <meta name="viewport" content="width = 320" />
         <style>
             progress.hp { accent-color: green; }
             progress.hp-crisis { accent-color: red; }
@@ -155,10 +156,10 @@
     <body onload="onLoad()">
         <div class="healthbar-spread">
             <div class="right">
-        <input type="number" class="three-digits" id="hp-field" value="60" onchange="onHpChange(this.value)">
-        /
-        <input type="number" class="three-digits" id="max-hp-field" value="60" onchange="onMaxHpChange(this.value)">
-        <span id="max-hp-text" hidden>60</span>
+                <input type="number" class="three-digits" id="hp-field" value="60" onchange="onHpChange(this.value)">
+                /
+                <input type="number" class="three-digits" id="max-hp-field" value="60" onchange="onMaxHpChange(this.value)">
+                <span id="max-hp-text" hidden>60</span>
             </div>
             <div class="left">
                 <progress class="hp" id="hp-bar" value="60" max="60"></progress>
@@ -167,18 +168,18 @@
         <p/>
         <div class="healthbar-spread">
             <div class="right">
-        <input type="number" class="three-digits" id="mp-field" value="50" onchange="onMpChange(this.value)">
-        /
-        <input type="number" class="three-digits" id="max-mp-field" value="50" onchange="onMaxMpChange(this.value)">
-        <span id="max-mp-text" hidden>50</span>
+                <input type="number" class="three-digits" id="mp-field" value="50" onchange="onMpChange(this.value)">
+                /
+                <input type="number" class="three-digits" id="max-mp-field" value="50" onchange="onMaxMpChange(this.value)">
+                <span id="max-mp-text" hidden>50</span>
             </div>
             <div class="left">
                 <progress class="mp" id="mp-bar" value="50" max="50"></progress>
             </div>
         </div>
         <p/>
-        <button id="max-lock-button" onclick="setLockMax(true)">Lock max HP/MP</button>
-        <button id="max-unlock-button" onclick="setLockMax(false)" hidden>Unlock max HP/MP</button>
+        <button id="max-lock-button" onclick="setLockMax(true)">Lock max values</button>
+        <button id="max-unlock-button" onclick="setLockMax(false)" hidden>Unlock max values</button>
         <p/>
         <button onclick="onAllow(); save();">Save</button>
         <span id="localstorage-consent">
