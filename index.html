@@ -26,6 +26,14 @@
                 float: right;
             }
             .healthbar-spread progress { width: 100%; }
+
+            body.dark {
+                background-color: black;
+                color: white;
+            }
+            .dark {
+                color-scheme: dark;
+            }
         </style>
         <script>
             // GLOBAL
@@ -38,6 +46,11 @@
                 }
             }
             function onLoad() {
+                // block autosave while loading, so calls to set* while loading
+                // don't attempt to autosave stuff for properties that haven't been loaded yet
+                // (yes, the html does say this is not checked, but some browsers retain the check state when reloading)
+                document.getElementById("autosave-checkbox").checked = false;
+
                 const hpbar = getHpBar();
                 const mpbar = getMpBar();
 
@@ -75,9 +88,6 @@
                         document.getElementById("max-mp-field").value = maxmp;
                         document.getElementById("max-mp-text").innerText = maxmp;
                     });
-                    setFromLocalStorageIfNotNull("autosave", (autosave)=>{
-                        document.getElementById("autosave-checkbox").checked = (autosave === 'true');  // js weirdness
-                    });
                     setFromLocalStorageIfNotNull("lockmax", (lock)=>{
                         setLockMax(lock === 'true');  // js weirdness
                     });
@@ -86,6 +96,14 @@
                             setWakeLock(lock === 'true');  // js weirdness
                         });
                     }
+                    setFromLocalStorageIfNotNull("darktheme", (dark)=>{
+                        setDarkTheme(dark === 'true');  // js weirdness
+                    });
+                    
+                    // MUST BE LAST
+                    setFromLocalStorageIfNotNull("autosave", (autosave)=>{
+                        document.getElementById("autosave-checkbox").checked = (autosave === 'true');  // js weirdness
+                    });
                     checkCrisis()
                 }
             }
@@ -192,6 +210,25 @@
                     finalstuff();
                 }
             }
+            function setDarkTheme(dark) {
+                document.getElementById("theme-light-button").hidden = dark;
+                document.getElementById("theme-dark-button").hidden = !dark;
+                if (dark) {
+                    document.body.classList.add("dark");
+                    Array.from(document.getElementsByClassName("three-digits")).forEach(element => {
+                        element.classList.add("dark");
+                    });
+                }
+                else {
+                    document.body.classList.remove("dark");
+                    Array.from(document.getElementsByClassName("three-digits")).forEach(element => {
+                        element.classList.remove("dark");
+                    });
+                }
+                if (getAutosave()) {
+                    save();
+                }
+            }
             function onAllow() {
                 window.allowLocalStorage = true;
                 document.getElementById("localstorage-consent").hidden = true;
@@ -213,6 +250,7 @@
                     ls.setItem("autosave", getAutosave());
                     ls.setItem("lockmax", document.getElementById("max-lock-button").hidden)
                     ls.setItem("wakelock", wakeLock !== null);
+                    ls.setItem("darktheme", document.body.classList.contains("dark"));
                 }
             }
         </script>
@@ -248,6 +286,8 @@
         <button id="wake-lock-button-on" onclick="setWakeLock(false)" hidden>Screen wake lock: ON</button>
         <button id="wake-lock-button-wait" disabled hidden>Please wait...</button>
         <button id="wake-lock-button-disabled" disabled hidden>Screen wake lock: Unsupported</button>
+        <button id="theme-light-button" onclick="setDarkTheme(true)">Theme: Light</button>
+        <button id="theme-dark-button" onclick="setDarkTheme(false)" hidden>Theme: Dark</button>
         <p/>
         <button onclick="onAllow(); save();">Save</button>
         <span id="localstorage-consent">
