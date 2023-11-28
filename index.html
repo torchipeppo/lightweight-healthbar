@@ -28,6 +28,9 @@
             .healthbar-spread progress { width: 100%; }
         </style>
         <script>
+            // GLOBAL
+            var wakeLock = null;
+
             function setFromLocalStorageIfNotNull(item, callback) {
                 const val = window.localStorage.getItem(item);
                 if (val != null) {
@@ -37,6 +40,20 @@
             function onLoad() {
                 const hpbar = getHpBar();
                 const mpbar = getMpBar();
+
+                if ("wakeLock" in navigator) {
+                    document.addEventListener("visibilitychange", async () => {
+                        if (wakeLock !== null && document.visibilityState === "visible") {
+                            wakeLock = await navigator.wakeLock.request("screen");
+                        }
+                    });
+                }
+                else {
+                    document.getElementById("wake-lock-button-off").hidden = true;
+                    document.getElementById("wake-lock-button-on").hidden = true;
+                    document.getElementById("wake-lock-button-disabled").hidden = false;
+                }
+
                 window.allowLocalStorage = window.localStorage.getItem("allowLocalStorage");
                 if (window.allowLocalStorage) {
                     onAllow();
@@ -64,6 +81,11 @@
                     setFromLocalStorageIfNotNull("lockmax", (lock)=>{
                         setLockMax(lock === 'true');  // js weirdness
                     });
+                    if ("wakeLock" in navigator) {
+                        setFromLocalStorageIfNotNull("wakelock", (lock)=>{
+                            setWakeLock(lock === 'true');  // js weirdness
+                        });
+                    }
                     checkCrisis()
                 }
             }
@@ -129,6 +151,47 @@
                     save();
                 }
             }
+            function setWakeLock(lock) {
+                function finalstuff() {
+                    document.getElementById("wake-lock-button-off").hidden = wakeLock !== null;
+                    document.getElementById("wake-lock-button-on").hidden = wakeLock === null;
+                    document.getElementById("wake-lock-button-wait").hidden = true;
+                    if (getAutosave()) {
+                        save();
+                    }
+                }
+
+                document.getElementById("wake-lock-button-off").hidden = true;
+                document.getElementById("wake-lock-button-on").hidden = true;
+                document.getElementById("wake-lock-button-wait").hidden = false;
+                document.getElementById("wake-lock-button-disabled").hidden = true;
+
+                if (lock && wakeLock === null) {
+                    navigator.wakeLock.request().then((wl)=>{
+                        wakeLock = wl;
+                    })
+                    .catch(()=>{
+                        console.error("Error in setWakeLock");
+                    })
+                    .finally(()=>{
+                        finalstuff();
+                    });
+                }
+                else if (!lock && wakeLock !== null) {
+                    wakeLock.release().then(()=>{
+                        wakeLock = null;
+                    })
+                    .catch(()=>{
+                        console.error("Error in setWakeLock");
+                    })
+                    .finally(()=>{
+                        finalstuff();
+                    });
+                }
+                else {
+                    finalstuff();
+                }
+            }
             function onAllow() {
                 window.allowLocalStorage = true;
                 document.getElementById("localstorage-consent").hidden = true;
@@ -149,6 +212,7 @@
                     ls.setItem("maxmp", mpbar.getAttribute("max"));
                     ls.setItem("autosave", getAutosave());
                     ls.setItem("lockmax", document.getElementById("max-lock-button").hidden)
+                    ls.setItem("wakelock", wakeLock !== null);
                 }
             }
         </script>
@@ -180,6 +244,10 @@
         <p/>
         <button id="max-lock-button" onclick="setLockMax(true)">Lock max values</button>
         <button id="max-unlock-button" onclick="setLockMax(false)" hidden>Unlock max values</button>
+        <button id="wake-lock-button-off" onclick="setWakeLock(true)">Screen wake lock: OFF</button>
+        <button id="wake-lock-button-on" onclick="setWakeLock(false)" hidden>Screen wake lock: ON</button>
+        <button id="wake-lock-button-wait" disabled hidden>Please wait...</button>
+        <button id="wake-lock-button-disabled" disabled hidden>Screen wake lock: Unsupported</button>
         <p/>
         <button onclick="onAllow(); save();">Save</button>
         <span id="localstorage-consent">
