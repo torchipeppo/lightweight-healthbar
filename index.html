@@ -179,7 +179,7 @@
                 }
             }
             function setHp(newHp) {    // per motivi esterni all'editing del campo apposito
-                document.getElementById("hp-field").setAttribute("value", newHp);
+                document.getElementById("hp-field").value = newHp;
                 onHpChange(newHp);
             }
             function adjustHp(amount) {
@@ -204,7 +204,7 @@
                 }
             }
             function setMp(newMp) {    // per motivi esterni all'editing del campo apposito
-                document.getElementById("mp-field").setAttribute("value", newMp);
+                document.getElementById("mp-field").value = newMp;
                 onMpChange(newMp);
             }
             function adjustMp(amount) {
