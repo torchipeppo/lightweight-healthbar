@@ -4,16 +4,26 @@
         <title>Lightweight Healthbars</title>
         <link rel='icon' type='image/ico' href='./favicon.ico'/>
         <meta name="viewport" content="width = 320" />
+
+
         <style>
             progress.hp { accent-color: green; }
             progress.hp-crisis { accent-color: red; }
             progress.mp { accent-color: blue; }
 
-            input.three-digits { width:4em; }
+            input.three-digits { width:3.3em; }
+
+            button.adjustment-button {
+                min-width: 4.3em;
+                height: auto;
+                margin: 3px 4px 0px;
+                padding: 0px 6px;
+            }
             
             .healthbar-spread {
                 width: auto;
                 max-width: 40em;
+                height: 1.3lh;
             }
             .healthbar-spread .left {
                 width: auto;
@@ -22,10 +32,14 @@
             .healthbar-spread .right {
                 width: auto;
                 padding-left: 10px;
-                padding-right: 10px;
+                padding-right: 0px;
                 float: right;
             }
             .healthbar-spread progress { width: 100%; }
+
+            span.numbers {
+                margin-right: 5px;
+            }
 
             body.dark {
                 background-color: black;
@@ -35,9 +49,22 @@
                 color-scheme: dark;
             }
         </style>
+
+
         <script>
             // GLOBAL
             var wakeLock = null;
+
+            function adjustedWithClamp(original, adjustment, min, max) {
+                if (adjustment >= 0) {
+                    adjustment = Math.min(adjustment, Math.max(max-original, 0));
+                }
+                else {
+                    // minus signs to work in absolute value
+                    adjustment = - Math.min(-adjustment, Math.max(original-min, 0));
+                }
+                return original + adjustment;
+            }
 
             function setFromLocalStorageIfNotNull(item, callback) {
                 const val = window.localStorage.getItem(item);
@@ -99,6 +126,12 @@
                     setFromLocalStorageIfNotNull("darktheme", (dark)=>{
                         setDarkTheme(dark === 'true');  // js weirdness
                     });
+                    setFromLocalStorageIfNotNull("hpAdjHidden", (hidden)=>{
+                        setHpAdjustmentsHidden(hidden === 'true');  // js weirdness
+                    });
+                    setFromLocalStorageIfNotNull("mpAdjHidden", (hidden)=>{
+                        setMpAdjustmentsHidden(hidden === 'true');  // js weirdness
+                    });
                     
                     // MUST BE LAST
                     setFromLocalStorageIfNotNull("autosave", (autosave)=>{
@@ -107,6 +140,7 @@
                     checkCrisis()
                 }
             }
+
             function getHpBar() {
                 return document.getElementById("hp-bar");
             }
@@ -116,6 +150,7 @@
             function getAutosave() {
                 return document.getElementById("autosave-checkbox").checked;
             }
+
             function checkCrisis() {
                 const hpbar = getHpBar();
                 const crisisThreshold = Math.floor(hpbar.getAttribute("max") / 2);
@@ -143,6 +178,16 @@
                     save();
                 }
             }
+            function setHp(newHp) {    // per motivi esterni all'editing del campo apposito
+                document.getElementById("hp-field").setAttribute("value", newHp);
+                onHpChange(newHp);
+            }
+            function adjustHp(amount) {
+                const hpbar = getHpBar();
+                let newHp = adjustedWithClamp(Number(hpbar.getAttribute("value")), amount, 0, Number(hpbar.getAttribute("max")));
+                setHp(newHp);
+            }
+
             function onMpChange(newMp) {
                 const mpbar = getMpBar();
                 mpbar.setAttribute("value", newMp);
@@ -158,6 +203,27 @@
                     save();
                 }
             }
+            function setMp(newMp) {    // per motivi esterni all'editing del campo apposito
+                document.getElementById("mp-field").setAttribute("value", newMp);
+                onMpChange(newMp);
+            }
+            function adjustMp(amount) {
+                const mpbar = getMpBar();
+                let newMp = adjustedWithClamp(Number(mpbar.getAttribute("value")), amount, 0, Number(mpbar.getAttribute("max")));
+                setMp(newMp);
+            }
+
+            function resetHpMpToMax() {
+                const hpbar = getHpBar();
+                const mpbar = getMpBar();
+                setHp(hpbar.getAttribute("max"));
+                setMp(mpbar.getAttribute("max"));
+            }
+            function resetHpMpToZero() {
+                setHp(0);
+                setMp(0);
+            }
+
             function setLockMax(lock) {
                 document.getElementById("max-hp-field").hidden = lock;
                 document.getElementById("max-hp-text").hidden = !lock;
@@ -169,6 +235,7 @@
                     save();
                 }
             }
+
             function setWakeLock(lock) {
                 function finalstuff() {
                     document.getElementById("wake-lock-button-off").hidden = wakeLock !== null;
@@ -210,6 +277,7 @@
                     finalstuff();
                 }
             }
+
             function setDarkTheme(dark) {
                 document.getElementById("theme-light-button").hidden = dark;
                 document.getElementById("theme-dark-button").hidden = !dark;
@@ -229,6 +297,24 @@
                     save();
                 }
             }
+
+            function setHpAdjustmentsHidden(adjHidden) {
+                document.getElementById("hp-adjustments").hidden = adjHidden;
+                document.getElementById("hp-hide-button").hidden = adjHidden;
+                document.getElementById("hp-show-button").hidden = !adjHidden;
+                if (getAutosave()) {
+                    save();
+                }
+            }
+            function setMpAdjustmentsHidden(adjHidden) {
+                document.getElementById("mp-adjustments").hidden = adjHidden;
+                document.getElementById("mp-hide-button").hidden = adjHidden;
+                document.getElementById("mp-show-button").hidden = !adjHidden;
+                if (getAutosave()) {
+                    save();
+                }
+            }
+
             function onAllow() {
                 window.allowLocalStorage = true;
                 document.getElementById("localstorage-consent").hidden = true;
@@ -248,40 +334,79 @@
                     ls.setItem("mp", mpbar.getAttribute("value"));
                     ls.setItem("maxmp", mpbar.getAttribute("max"));
                     ls.setItem("autosave", getAutosave());
-                    ls.setItem("lockmax", document.getElementById("max-lock-button").hidden)
+                    ls.setItem("lockmax", document.getElementById("max-lock-button").hidden);
                     ls.setItem("wakelock", wakeLock !== null);
                     ls.setItem("darktheme", document.body.classList.contains("dark"));
+                    ls.setItem("hpAdjHidden", document.getElementById("hp-adjustments").hidden);
+                    ls.setItem("mpAdjHidden", document.getElementById("mp-adjustments").hidden);
                 }
             }
         </script>
     </head>
+
+
     <body onload="onLoad()">
+
         <div class="healthbar-spread">
             <div class="right">
-                <input type="number" class="three-digits" id="hp-field" value="60" onchange="onHpChange(this.value)">
-                /
-                <input type="number" class="three-digits" id="max-hp-field" value="60" onchange="onMaxHpChange(this.value)">
-                <span id="max-hp-text" hidden>60</span>
+                <span class="numbers">
+                    <input type="number" class="three-digits" id="hp-field" value="60" onchange="onHpChange(this.value)">
+                    /
+                    <input type="number" class="three-digits" id="max-hp-field" value="60" onchange="onMaxHpChange(this.value)">
+                    <span id="max-hp-text" hidden>60</span>
+                </span>
+                <button id="hp-hide-button" onclick="setHpAdjustmentsHidden(true);" hidden>&and;</button>
+                <button id="hp-show-button" onclick="setHpAdjustmentsHidden(false);">&or;</button>
             </div>
             <div class="left">
                 <progress class="hp" id="hp-bar" value="60" max="60"></progress>
             </div>
         </div>
+        <!-- div mi pare mandi a capo da solo, dovremmo cavarcela senza br qui -->
+
+        <span id="hp-adjustments" hidden>
+            <!-- <button id="button-hp-reset" class="adjustment-button" onclick="console.error('Not implemented');">RESET</button> -->
+            <button id="button-hp-add-5" class="adjustment-button" onclick="adjustHp(5);">+5</button>
+            <button id="button-hp-add-1" class="adjustment-button" onclick="adjustHp(1);">+1</button>
+            <button id="button-hp-sub-5" class="adjustment-button" onclick="adjustHp(-5);">-5</button>
+            <button id="button-hp-sub-1" class="adjustment-button" onclick="adjustHp(-1);">-1</button>
+        </span>
         <p/>
+
         <div class="healthbar-spread">
             <div class="right">
-                <input type="number" class="three-digits" id="mp-field" value="50" onchange="onMpChange(this.value)">
-                /
-                <input type="number" class="three-digits" id="max-mp-field" value="50" onchange="onMaxMpChange(this.value)">
-                <span id="max-mp-text" hidden>50</span>
+                <span class="numbers">
+                    <input type="number" class="three-digits" id="mp-field" value="50" onchange="onMpChange(this.value)">
+                    /
+                    <input type="number" class="three-digits" id="max-mp-field" value="50" onchange="onMaxMpChange(this.value)">
+                    <span id="max-mp-text" hidden>50</span>
+                </span>
+                <button id="mp-hide-button" onclick="setMpAdjustmentsHidden(true);" hidden>&and;</button>
+                <button id="mp-show-button" onclick="setMpAdjustmentsHidden(false);">&or;</button>
             </div>
             <div class="left">
                 <progress class="mp" id="mp-bar" value="50" max="50"></progress>
             </div>
         </div>
+        <!-- div mi pare mandi a capo da solo, dovremmo cavarcela senza br qui -->
+
+        <span id="mp-adjustments" hidden>
+            <!-- <button id="button-mp-reset" class="adjustment-button" onclick="console.error('Not implemented');">RESET</button> -->
+            <button id="button-mp-add-5" class="adjustment-button" onclick="adjustMp(5);">+5</button>
+            <button id="button-mp-add-1" class="adjustment-button" onclick="adjustMp(1);">+1</button>
+            <button id="button-mp-sub-5" class="adjustment-button" onclick="adjustMp(-5);">-5</button>
+            <button id="button-mp-sub-1" class="adjustment-button" onclick="adjustMp(-1);">-1</button>
+        </span>
         <p/>
+
         <button id="max-lock-button" onclick="setLockMax(true)">Lock max values</button>
         <button id="max-unlock-button" onclick="setLockMax(false)" hidden>Unlock max values</button>
+        <button id="reset-max-button" onclick="resetHpMpToMax()">Reset to max</button>
+        <button id="reset-zero-button" onclick="resetHpMpToZero()" hidden>Reset to zero</button>
+        <!-- Nascondo il bottone del reset a zero perché eccede lo spazio su mobile (e su FU non serve) -->
+        <!-- Se qualcuno lo vuole, può sempre usare il campo input... o i devtools del browser :) -->
+        <p/>
+
         <button id="wake-lock-button-off" onclick="setWakeLock(true)">Screen wake lock: OFF</button>
         <button id="wake-lock-button-on" onclick="setWakeLock(false)" hidden>Screen wake lock: ON</button>
         <button id="wake-lock-button-wait" disabled hidden>Please wait...</button>
@@ -289,6 +414,7 @@
         <button id="theme-light-button" onclick="setDarkTheme(true)">Theme: Light</button>
         <button id="theme-dark-button" onclick="setDarkTheme(false)" hidden>Theme: Dark</button>
         <p/>
+
         <button onclick="onAllow(); save();">Save</button>
         <span id="localstorage-consent">
             <i>By using the "Save" feature, you consent to this page using the Local Storage of your browser. No data is ever sent to any server.</i>
